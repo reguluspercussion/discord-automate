@@ -1,0 +1,20 @@
+name: Test Scheduled Action
+
+# スケジュール設定
+on:
+  schedule:
+    # cron形式で指定（例: 毎日午前9時）
+    - cron: '*/5 * * * *'
+  # 手動トリガー（テスト用に便利）
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run a test script
+        run: echo "GitHub Actions 定期実行テストです！ $(date)"

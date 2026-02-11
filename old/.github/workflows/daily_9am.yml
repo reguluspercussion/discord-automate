@@ -1,0 +1,48 @@
+name: Run Python Daily 9AM JST
+
+on:
+  schedule:
+    #- cron: "5 2 * * *"
+    - cron: "*/1 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Run main script
+        run: python test1_AutoPost.py
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID_TEST_POST: ${{ secrets.DISCORD_CHANNEL_ID_TEST_POST }}
+
+      # - run: exit 1
+
+      # 🔴 失敗通知（既存）
+      - name: Notify error via DM
+        if: failure()
+        env:
+          DISCORD_BOT_TOKEN_WORK_NOTIFICATION: ${{ secrets.DISCORD_BOT_TOKEN_WORK_NOTIFICATION }}
+          DISCORD_CHANNEL_ID_ERROR_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_ERROR_NOTIFICATION }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: python notify_failure.py
+
+      # ✅ 成功通知（追加）
+      - name: Notify success to server channel
+        if: success()
+        env:
+          DISCORD_BOT_TOKEN_WORK_NOTIFICATION: ${{ secrets.DISCORD_BOT_TOKEN_WORK_NOTIFICATION }}
+          DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: python notify_success.py
