@@ -21,4 +21,4 @@ jobs:
       - run: python test1_AutoPost.py
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          
+          DISCORD_CHANNEL_ID_TEST_POST: ${{ secrets.DISCORD_CHANNEL_ID_TEST_POST }}
