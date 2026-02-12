@@ -2,6 +2,8 @@
 [Release Note]
 2026/2/11 version 1 created by M.Ishida
 First Release Version
+2026/2/13 version 2 created by M.Ishida
+Enhanced Security for GitHub Public Repositories
 '''
 
 import discord
@@ -32,9 +34,9 @@ async def get_db_connection():
 
     return await asyncpg.connect(
         host=os.environ["DB_HOST"],
-        port=5432,
-        database="postgres",
-        user="postgres",
+        port=os.environ["DB_PORT"],
+        database=os.environ["DB_DATABASE"],
+        user=os.environ["DB_USER"],
         password=os.environ["DB_PASSWORD"],
         ssl=ssl_ctx,
         timeout=10,
