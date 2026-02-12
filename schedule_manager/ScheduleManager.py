@@ -4,6 +4,8 @@
 First Release Version
 2026/2/13 version 2 created by M.Ishida
 Enhanced Security for GitHub Public Repositories
+Changing the Handling for Schedule Conficts
+Change the Message Read Range
 '''
 
 import discord
@@ -43,14 +45,14 @@ async def get_db_connection():
     )
 
 # =====================
-# Discord メッセージ取得（3日前まで）
+# Discord メッセージ取得（7日前まで）
 # =====================
 async def fetch_recent_messages():
     await client.wait_until_ready()
     channel = await client.fetch_channel(CHANNEL_ID)
 
     now_utc = datetime.now(timezone.utc)
-    three_days_ago_utc = now_utc - timedelta(days=3)
+    three_days_ago_utc = now_utc - timedelta(days=7)
 
     messages = []
     async for message in channel.history(
@@ -110,10 +112,7 @@ async def insert_schedules(conn, schedules):
         (practice_date, start_time, end_time, place, announce)
         VALUES ($1, $2, $3, $4, false)
         ON CONFLICT (practice_date, start_time)
-        DO UPDATE SET
-            end_time = EXCLUDED.end_time,
-            place = EXCLUDED.place,
-            announce = false
+        DO NOTHING
     """
 
     current_year = datetime.now().year
