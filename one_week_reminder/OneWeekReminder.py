@@ -11,8 +11,6 @@ from datetime import date, timedelta
 import asyncpg
 import discord
 
-import socket
-
 # ========= Discord =========
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -36,7 +34,6 @@ async def get_db_conn():
         password=os.environ["DB_PASSWORD"],
         ssl=ssl_ctx,
         timeout=10,
-        family=socket.AF_INET
     )
 
 
