@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).parent
 
 # 実行対象
 TARGET_SCRIPTS = [
-    # BASE_DIR / "schedule_manager/ScheduleManager.py",
+    BASE_DIR / "schedule_manager/ScheduleManager.py",
     BASE_DIR / "one_week_reminder/OneWeekReminder.py",
     # BASE_DIR / "test1_AutoPost.py",
     # BASE_DIR / "target2.py",
