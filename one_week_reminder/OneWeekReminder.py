@@ -22,9 +22,9 @@ async def get_db_conn():
 
     return await asyncpg.connect(
         host=os.environ["DB_HOST"],
-        port=5432,
-        database="postgres",
-        user="postgres",
+        port=os.environ["DB_PORT"],
+        database=os.environ["DB_DATABASE"],
+        user=os.environ["DB_USER"],
         password=os.environ["DB_PASSWORD"],
         ssl=ssl_ctx,
         timeout=10,
@@ -54,8 +54,9 @@ async def process_schedule():
                 place
             FROM schedule
             WHERE announce = FALSE
-              AND practice_date <= $1
+              AND practice_date BETWEEN $1 AND $2
             """,
+            today,
             limit_date
         )
 
@@ -66,11 +67,15 @@ async def process_schedule():
         thread = await client.fetch_channel(THREAD_ID)
 
         for r in rows:
+            # 秒を除外した時刻フォーマット
+            start_str = r["start_time"].strftime("%H:%M")
+            end_str = r["end_time"].strftime("%H:%M")
+
             message = (
                 f"<@&{MUSIC_ROLE_ID}>\n"
                 f"📢 **練習予定の確定をお願いします**\n\n"
                 f"🗓 日付：**{r['practice_date']}**\n"
-                f"⏰ 時間：**{r['start_time']}〜{r['end_time']}**\n"
+                f"⏰ 時間：**{start_str}〜{end_str}**\n"
                 f"📍 場所：**{r['place']}**\n\n"
                 f"※ 練習日まで7日を切っています。"
             )
