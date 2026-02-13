@@ -1,3 +1,9 @@
+'''
+[Release Note]
+2026/2/13 version 1 created by M.Ishida
+First Release Version
+'''
+
 import os
 import ssl
 from datetime import date, timedelta
