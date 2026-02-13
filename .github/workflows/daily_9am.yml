@@ -17,14 +17,6 @@ jobs:
           python-version: '3.13'
 
       - run: pip install -r requirements.txt
-
-      - name: Debug DB
-        run: |
-          echo "HOST=$DB_HOST"
-          echo "PORT=$DB_PORT"
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
       
       #- run: python runner.py
       - run: python one_week_reminder/OneWeekReminder.py
