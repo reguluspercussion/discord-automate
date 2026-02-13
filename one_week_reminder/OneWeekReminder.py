@@ -11,6 +11,8 @@ from datetime import date, timedelta
 import asyncpg
 import discord
 
+import socket
+
 # ========= Discord =========
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
