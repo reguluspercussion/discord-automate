@@ -17,23 +17,6 @@ jobs:
           python-version: '3.13'
 
       - run: pip install -r requirements.txt
-
-      #- run: python runner.py
-      - run: python schedule_manager/ScheduleManager.py
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          DISCORD_BOT_TOKEN_WORK_NOTIFICATION: ${{ secrets.DISCORD_BOT_TOKEN_WORK_NOTIFICATION }}
-          DISCORD_BOT_TOKEN_SCHEDULE_MANAGER: ${{ secrets.DISCORD_BOT_TOKEN_SCHEDULE_MANAGER }}
-          DISCORD_CHANNEL_ID_TEST_POST: ${{ secrets.DISCORD_CHANNEL_ID_TEST_POST }}
-          DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION }}
-          DISCORD_CHANNEL_ID_ERROR_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_ERROR_NOTIFICATION }}
-          DISCORD_CHANNEL_ID_MONTHLY_SCHEDULE: ${{ secrets.DISCORD_CHANNEL_ID_MONTHLY_SCHEDULE }}
-          DISCORD_ROLE_ID_MUSIC_COMMITEE: ${{ secrets.DISCORD_ROLE_ID_MUSIC_COMMITEE }}
       
       #- run: python runner.py
       - run: python one_week_reminder/OneWeekReminder.py
