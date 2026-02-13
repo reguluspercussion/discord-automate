@@ -4,6 +4,8 @@
 First Release Version
 2026/2/13 version 2 created by M.Ishida
 Enhanced Security for GitHub Public Repositories
+Changing the Handling for Schedule Conficts
+Change the Message Read Range
 '''
 
 import discord
@@ -110,10 +112,7 @@ async def insert_schedules(conn, schedules):
         (practice_date, start_time, end_time, place, announce)
         VALUES ($1, $2, $3, $4, false)
         ON CONFLICT (practice_date, start_time)
-        DO UPDATE SET
-            end_time = EXCLUDED.end_time,
-            place = EXCLUDED.place,
-            announce = false
+        DO NOTHING
     """
 
     current_year = datetime.now().year

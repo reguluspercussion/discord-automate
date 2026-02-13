@@ -2,6 +2,8 @@
 [Release Note]
 2026/2/11 version 1 created by M.Ishida
 First Release Version
+2026/2/13 version 2 created by M.Ishida
+Add Function "Export Monthly Schedule to Supabase"
 '''
 
 import subprocess
@@ -12,8 +14,8 @@ BASE_DIR = Path(__file__).parent
 
 # 実行対象
 TARGET_SCRIPTS = [
-    # BASE_DIR / "schedule_manager/ScheduleManager.py",
-    BASE_DIR / "test1_AutoPost.py",
+    BASE_DIR / "schedule_manager/ScheduleManager.py",
+    # BASE_DIR / "test1_AutoPost.py",
     # BASE_DIR / "target2.py",
     # BASE_DIR / "target3.py",
 ]
