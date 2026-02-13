@@ -43,14 +43,14 @@ async def get_db_connection():
     )
 
 # =====================
-# Discord メッセージ取得（3日前まで）
+# Discord メッセージ取得（7日前まで）
 # =====================
 async def fetch_recent_messages():
     await client.wait_until_ready()
     channel = await client.fetch_channel(CHANNEL_ID)
 
     now_utc = datetime.now(timezone.utc)
-    three_days_ago_utc = now_utc - timedelta(days=3)
+    three_days_ago_utc = now_utc - timedelta(days=7)
 
     messages = []
     async for message in channel.history(
