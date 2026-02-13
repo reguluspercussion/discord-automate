@@ -17,7 +17,8 @@ client = discord.Client(intents=intents)
 
 DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
 MUSIC_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_MUSIC_COMMITEE"])
-THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_TEST_POST"])
+# THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_TEST_POST"]) # for test
+THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_MUSIC_COMMITEE"])
 
 
 # ========= DB =========
