@@ -34,6 +34,7 @@ async def get_db_conn():
         password=os.environ["DB_PASSWORD"],
         ssl=ssl_ctx,
         timeout=10,
+        family=socket.AF_INET
     )
 
 
