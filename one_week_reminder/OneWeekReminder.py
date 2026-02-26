@@ -2,6 +2,8 @@
 [Release Note]
 2026/2/13 version 1 created by M.Ishida
 First Release Version
+2026/2/27 version 2 created by M.Ishida
+Add Function that Announce Carrier
 '''
 
 import os
@@ -17,9 +19,11 @@ client = discord.Client(intents=intents)
 
 DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
 MUSIC_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_MUSIC_COMMITEE"])
-# THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_TEST_POST"]) # for test
 THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_MUSIC_COMMITEE"])
 
+CARRIER_CHANNEL_ID = int(os.environ["DISCORD_CHANNEL_ID_CARRIER"])
+CARRIER_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_CARRIER"])
+PERCUSSION_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_PERCUSSION"])
 
 # ========= DB =========
 async def get_db_conn():
@@ -70,7 +74,10 @@ async def process_schedule():
         if not rows:
             print("通知対象なし")
             return
-
+        
+        # ==============================
+        # 練習予定作成リマインド
+        # ==============================
         thread = await client.fetch_channel(THREAD_ID)
 
         for r in rows:
@@ -87,7 +94,29 @@ async def process_schedule():
                 f"※ 練習日まで7日を切っています。"
             )
 
-            await thread.send(message)
+            #await thread.send(message)
+
+            # ==============================
+            # 運び屋さん募集スレッド作成
+            # ==============================
+            carrier_channel = await client.fetch_channel(CARRIER_CHANNEL_ID)
+
+            thread_name = f"{r['practice_date'].month}/{r['practice_date'].day}@{r['place']}"
+
+            carrier_thread = await carrier_channel.create_thread(
+                name=thread_name,
+                type=discord.ChannelType.public_thread
+            )
+
+            carrier_message = (
+                f"<@&{CARRIER_ROLE_ID}> <@&{PERCUSSION_ROLE_ID}>\n"
+                f"🚚 **楽器運搬ご協力のお願い**\n\n"
+                f"🗓 日付：**{r['practice_date']}**\n"
+                f"📍 場所：**{r['place']}**\n\n"
+                f"楽器運搬をお手伝いいただける方は、このスレッドに返信をお願いします！"
+            )
+
+            await carrier_thread.send(carrier_message)
 
             await conn.execute(
                 """
