@@ -94,7 +94,7 @@ async def process_schedule():
                 f"※ 練習日まで7日を切っています。"
             )
 
-            #await thread.send(message)
+            await thread.send(message)
 
             # ==============================
             # 運び屋さん募集スレッド作成
