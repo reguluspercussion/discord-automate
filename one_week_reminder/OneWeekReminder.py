@@ -64,7 +64,7 @@ async def process_schedule():
                 end_time,
                 place
             FROM schedule
-            WHERE announce = FALSE
+            WHERE announce_1w = FALSE
               AND practice_date BETWEEN $1 AND $2
             """,
             today,
@@ -121,7 +121,7 @@ async def process_schedule():
             await conn.execute(
                 """
                 UPDATE schedule
-                SET announce = TRUE
+                SET announce_1w = TRUE
                 WHERE id = $1
                 """,
                 r["id"]

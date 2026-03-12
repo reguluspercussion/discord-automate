@@ -109,8 +109,8 @@ def extract_schedule_data(text: str):
 async def insert_schedules(conn, schedules):
     sql = """
         INSERT INTO schedule
-        (practice_date, start_time, end_time, place, announce)
-        VALUES ($1, $2, $3, $4, false)
+        (practice_date, start_time, end_time, place, announce_1m, announce_2w, announce_1w, announce_1d)
+        VALUES ($1, $2, $3, $4, false, false, false, false)
         ON CONFLICT (practice_date, start_time)
         DO NOTHING
     """
