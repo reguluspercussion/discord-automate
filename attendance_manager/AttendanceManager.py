@@ -15,7 +15,7 @@ import discord
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-#DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
+DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
 #MUSIC_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_MUSIC_COMMITEE"])
 #THREAD_ID = int(os.environ["DISCORD_CHANNEL_ID_MUSIC_COMMITEE"])
 
@@ -106,6 +106,8 @@ async def process_schedule():
                 type=discord.ChannelType.public_thread
             )
 
+            thread_id = thread.id
+
             message = (
                 f"@everyone\n"
                 f"📢 **出欠の入力をお願いします**\n\n"
@@ -143,10 +145,12 @@ async def process_schedule():
             await conn.execute(
                 """
                 UPDATE schedule
-                SET announce_1m = TRUE
+                SET announce_1m = TRUE,
+                    thread_id = $2
                 WHERE id = $1
                 """,
-                r["id"]
+                r["id"],
+                thread_id
             )
 
             print(f"通知・更新完了 id={r['id']}")
