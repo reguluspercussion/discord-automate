@@ -6,6 +6,8 @@ First Release Version
 Enhanced Security for GitHub Public Repositories
 Changing the Handling for Schedule Conficts
 Change the Message Read Range
+2026/4/13 version 3 created by M.Ishida
+Bug fixed
 '''
 
 import discord
