@@ -18,8 +18,8 @@ jobs:
 
       - run: pip install -r requirements.txt
       
-      # - run: python runner.py
-      - run: python attendance_manager/AttendanceManager.py
+      - run: python runner.py
+      # - run: python attendance_manager/AttendanceManager.py
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
