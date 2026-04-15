@@ -5,6 +5,8 @@ First Release Version
 2026/2/13 version 2 created by M.Ishida
 Add Function "Export Monthly Schedule to Supabase"
 Add Function "Remind Schedule 1 Week Before"
+2026/4/15 version 3 created by M.Ishida
+Add Function "Attendance Management"
 '''
 
 import subprocess
@@ -17,7 +19,7 @@ BASE_DIR = Path(__file__).parent
 TARGET_SCRIPTS = [
     BASE_DIR / "schedule_manager/ScheduleManager.py",
     BASE_DIR / "one_week_reminder/OneWeekReminder.py",
-    # BASE_DIR / "test1_AutoPost.py",
+    BASE_DIR / "attendance_manager/AttendanceManager.py",
     # BASE_DIR / "target2.py",
     # BASE_DIR / "target3.py",
 ]
