@@ -1,7 +1,13 @@
 '''
 [Release Note]
-2026/X/XX version 1 created by M.Ishida
+2026/4/XX version 1 created by M.Ishida
 First Release Version
+2026/5/1 version 2 created by M.Ishida
+Bug Modification
+Change the SELECT Statement of Supabase
+Trb -> Tb
+Trp -> Tp
+Eu -> Euph
 '''
 
 import os
@@ -323,7 +329,7 @@ async def process_schedule():
                 instrument_order = [
                     "Fl", "Ob", "Fg", "Cl", "B.Cl",
                     "A.Sax", "T.Sax", "B.Sax",
-                    "Trp", "Hr", "Trb", "Eu", "Tu",
+                    "Tp", "Hr", "Tb", "Euph", "Tu",
                     "Cb", "Perc"
                 ]
 
@@ -349,7 +355,7 @@ async def process_schedule():
                     "変更がある場合は、本スレッド最上部のメッセージに押したスタンプを更新してください"
                 )
                 message_text = header + "\n".join(lines) + footer
-                
+
                 await msg.reply(message_text)
 
                 # DB更新
