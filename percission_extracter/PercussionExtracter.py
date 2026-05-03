@@ -1,267 +1,156 @@
-'''
-[Release Note]
-2026/X/XX version 1 created by M.Ishida
-First Release Version
-'''
-import re
+# メモ
+# 出席者から打楽器のみを抽出するところまで出来ている
+
+import os
+import ssl
+from datetime import date, timedelta
+
+import asyncpg
 import discord
-from datetime import datetime, timedelta
 
-# ==============================
-# メイン処理
-# ==============================
+# ========= Discord =========
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
 
-async def announce_percussion_if_needed(client, db):
-    """
-    打楽器運搬アナウンスのメイン処理
+DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
 
-    フロー：
-    ① 対象スケジュール取得
-    ② スレッドから練習予定取得
-    ③ 曲目抽出
-    ④ Perc出席者抽出
-    ⑤ 必要楽器抽出
-    ⑥ 投稿
-    ⑦ フラグ更新
-    """
+ATTENDING = "<:syusseki:1244649880576720977>"
+LATE = "<:chikoku:1244649936612626472>"
+LEAVINGEARLY = "<:soutai:1244642518197600336>"
 
-    schedules = await fetch_target_schedules(db)
+# ========= DB =========
+async def get_db_conn():
+    ssl_ctx = ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl.CERT_NONE
 
-    if not schedules:
-        return
+    return await asyncpg.connect(
+        host=os.environ["DB_HOST"],
+        port=int(os.environ["DB_PORT"]),
+        database=os.environ["DB_DATABASE"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        ssl=ssl_ctx,
+    )
 
-    for schedule in schedules:
-        thread = await fetch_thread(client, schedule["thread_id"])
+# ========= メイン処理 =========
+@client.event
+async def on_ready():
+    result = await extract_perc_attendees()
+    print("=== Perc出席者 ===")
+    print(result)
+    await client.close()
 
-        # ② 練習予定確認
-        practice_msg = await find_practice_message(thread)
-        if not practice_msg:
-            await notify_no_plan(thread)
-            continue
+async def extract_perc_attendees():
+    today = date.today()
+    limit_date_5d = today + timedelta(days=5)
 
-        # ③ 曲目抽出（■練習予定以降のみ）
-        songs = extract_songs_from_section(practice_msg.content)
-        if not songs:
-            await notify_no_plan(thread)
-            continue
+    conn = await get_db_conn()
 
-        # ④ Perc出席者抽出
-        perc_members = await extract_perc_attendees(client, schedule["message_id"])
-        if not perc_members:
-            continue
-
-        # ⑤ 必要楽器抽出
-        instruments = await extract_instruments(
-            db,
-            schedule["concert_id"],
-            songs,
-            perc_members
+    try:
+        # ==============================
+        # 対象スケジュール取得
+        # ==============================
+        rows = await conn.fetch(
+            """
+            SELECT
+                id,
+                thread_id,
+                message_id
+            FROM schedule
+            WHERE announce_perc = FALSE
+              AND practice_date BETWEEN $1 AND $2
+            """,
+            today,
+            limit_date_5d
         )
 
-        # ⑥ 投稿
-        await post_result(thread, schedule, songs, perc_members, instruments)
+        if not rows:
+            print("対象スケジュールなし")
+            return []
 
-        # ⑦ フラグ更新
-        await mark_announced(db, schedule["id"])
+        perc_members = []
 
+        # ==============================
+        # 各スケジュール処理
+        # ==============================
+        for r in rows:
+            try:
+                thread = await client.fetch_channel(int(r["thread_id"]))
+                msg = await thread.fetch_message(int(r["message_id"]))
 
-# ==============================
-# ① スケジュール取得
-# ==============================
+                # ステータス別ユーザー
+                status_users = {
+                    ATTENDING: [],
+                    LATE: [],
+                    LEAVINGEARLY: [],
+                }
 
-async def fetch_target_schedules(db):
-    """
-    ・練習まで5日未満
-    ・announce_perc = false
-    のスケジュールを取得
-    """
-    query = """
-    SELECT *
-    FROM schedule
-    WHERE practice_date < NOW() + INTERVAL '5 days'
-      AND announce_perc = false
-    """
-    return await db.fetch(query)
+                # ==============================
+                # リアクション取得
+                # ==============================
+                for reaction in msg.reactions:
+                    emoji = str(reaction.emoji)
 
+                    if emoji not in status_users:
+                        continue
 
-# ==============================
-# ② 練習予定メッセージ取得
-# ==============================
+                    async for user in reaction.users(limit=None):
+                        if user.bot:
+                            continue
+                        status_users[emoji].append(str(user.id))
 
-async def fetch_thread(client, thread_id):
-    """thread_idからスレッド取得"""
-    return await client.fetch_channel(thread_id)
+                # ==============================
+                # 対象ユーザーIDまとめ
+                # ==============================
+                all_ids = list(set(
+                    uid for users in status_users.values() for uid in users
+                ))
 
+                if not all_ids:
+                    continue
 
-async def find_practice_message(thread):
-    """
-    スレッド内から「■練習予定」を含むメッセージを探す
-    """
-    async for msg in thread.history(limit=100):
-        if "■練習予定" in msg.content:
-            return msg
-    return None
+                # ==============================
+                # Percのみ取得
+                # ==============================
+                records = await conn.fetch(
+                    """
+                    SELECT user_id, display_name
+                    FROM member
+                    WHERE user_id = ANY($1)
+                      AND instrument = 'Perc'
+                    """,
+                    all_ids
+                )
 
+                for rec in records:
+                    uid = rec["user_id"]
+                    name = rec["display_name"]
 
-# ==============================
-# ③ 曲目抽出（ここが今回のポイント）
-# ==============================
+                    status = []
 
-def extract_songs_from_section(content):
-    """
-    「■練習予定」セクションのみを対象に曲目を抽出
+                    if uid in status_users[LATE]:
+                        status.append("遅刻")
+                    if uid in status_users[LEAVINGEARLY]:
+                        status.append("早退")
 
-    仕様：
-    ・「■練習予定」以降を対象
-    ・次の「■」セクションが来たら終了
-    ・「・曲名」形式を抽出
-    """
+                    suffix = f"※{'・'.join(status)}" if status else ""
 
-    lines = content.splitlines()
+                    perc_members.append(name + suffix)
 
-    songs = []
-    in_section = False
+            except Exception as e:
+                print(f"エラー id={r['id']} : {e}")
 
-    for line in lines:
-        line = line.strip()
+        # ==============================
+        # デバッグ出力
+        # ==============================
+        print(f"Perc抽出結果: {perc_members}")
 
-        # セクション開始
-        if "■練習予定" in line:
-            in_section = True
-            continue
+        return perc_members
 
-        # 別セクションに入ったら終了
-        if in_section and line.startswith("■"):
-            break
+    finally:
+        await conn.close()
 
-        # セクション内のみ処理
-        if in_section:
-            match = re.match(r"[・\-]\s*(.+)", line)
-            if match:
-                songs.append(match.group(1).strip())
-
-    return songs
-
-
-# ==============================
-# ④ Perc出席者抽出
-# ==============================
-
-async def extract_perc_attendees(client, message_id):
-    """
-    出欠リアクションからPercメンバーのみ抽出
-    ※既存ロジック流用前提
-    """
-
-    message = await fetch_message(client, message_id)
-
-    attendees = parse_reactions(message)
-
-    perc_members = [
-        m for m in attendees
-        if is_percussion_member(m)
-    ]
-
-    return perc_members
-
-
-async def fetch_message(client, message_id):
-    """message_idからメッセージ取得（channelは適宜調整）"""
-    # 既存実装に合わせて修正
-    channel = client.get_channel(YOUR_CHANNEL_ID)
-    return await channel.fetch_message(message_id)
-
-
-# ==============================
-# ⑤ 必要楽器抽出
-# ==============================
-
-async def extract_instruments(db, concert_id, songs, members):
-    """
-    ・percussionテーブル参照
-    ・曲名一致
-    ・メンバ列からtext[]取得
-    ・重複排除
-    """
-
-    rows = await db.fetch("""
-        SELECT *
-        FROM percussion
-        WHERE concert_id = $1
-        ORDER BY concert_id DESC
-    """, concert_id)
-
-    instruments = set()
-
-    for song in songs:
-        row = next(
-            (r for r in rows if normalize(r["song_name"]) == normalize(song)),
-            None
-        )
-
-        if not row:
-            continue
-
-        for member in members:
-            if member in row and row[member]:
-                instruments.update(row[member])
-
-    return list(instruments)
-
-
-def normalize(text):
-    """曲名の簡易正規化"""
-    return text.replace(" ", "").lower()
-
-
-# ==============================
-# ⑥ 投稿
-# ==============================
-
-async def post_result(thread, schedule, songs, members, instruments):
-    """
-    結果をスレッドに投稿
-    """
-
-    msg = f"""
-■打楽器運搬整理
-
-【日付】
-{schedule['practice_date']}
-
-【場所】
-{schedule['location']}
-
-【練習曲】
-{', '.join(songs)}
-
-【参加者】
-{', '.join(members)}
-
-【必要楽器】
-{', '.join(instruments)}
-"""
-
-    await thread.send(msg)
-
-
-# ==============================
-# ⑦ フラグ更新
-# ==============================
-
-async def mark_announced(db, schedule_id):
-    """announce_percをtrueに更新"""
-    await db.execute("""
-        UPDATE schedule
-        SET announce_perc = true
-        WHERE id = $1
-    """, schedule_id)
-
-
-# ==============================
-# 補助（通知）
-# ==============================
-
-async def notify_no_plan(thread):
-    """練習予定未確定時の通知"""
-    await thread.send("練習予定が決まっていません（■練習予定が未記載）")
+# ========= 実行 =========
+if __name__ == "__main__":
+    client.run(DISCORD_TOKEN)

@@ -497,7 +497,7 @@ async def process_schedule():
                 instrument_order = [
                     "Fl", "Ob", "Fg", "Cl", "B.Cl",
                     "A.Sax", "T.Sax", "B.Sax",
-                    "Trp", "Hr", "Trb", "Eu", "Tu",
+                    "Tp", "Hr", "Tb", "Euph", "Tu",
                     "Cb", "Perc"
                 ]
 
