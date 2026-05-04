@@ -1,4 +1,8 @@
 '''
+[Readme]
+練習1週間前を切った＆未通知の練習をSupabase-Scheduleより抽出し、
+音楽委員に練習日程を決めるようアナウンス＆運搬チャンネルにスレッドを立ててドライバーを募るメッセージを投稿
+
 [Release Note]
 2026/2/13 version 1 created by M.Ishida
 First Release Version

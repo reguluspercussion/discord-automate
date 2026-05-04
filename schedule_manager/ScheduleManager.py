@@ -1,4 +1,7 @@
 '''
+[Readme]
+過去7日以内に投稿された「X月の練習予定」のメッセージから未抽出の練習予定をSupabase-Scheduleに取り込む
+
 [Release Note]
 2026/2/11 version 1 created by M.Ishida
 First Release Version

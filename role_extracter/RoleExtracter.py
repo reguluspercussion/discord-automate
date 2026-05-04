@@ -2,14 +2,34 @@ import os
 import discord
 
 # ===== 環境変数 =====
-DISCORD_TOKEN= os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
+DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
 SERVER_ID = int(os.environ["DISCORD_SERVER_ID"])
+
+MUSIC_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_MUSIC_COMMITEE"])
+SCORE_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_SCORE"])
+PR_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_PR"])
+IT_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_IT"])
+CARRIER_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_CARRIER"])
+CAMP_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_CAMP"])
+OTSUCHI_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_OTSUCHI"])
+
+# ===== 抽出したいロールID =====
+TARGET_ROLE_IDS = [
+    MUSIC_ROLE_ID,  # 音楽委員
+    SCORE_ROLE_ID,  # 楽譜係
+    PR_ROLE_ID,     # 広報係
+    IT_ROLE_ID,     # IT係
+    CARRIER_ROLE_ID,# 運び屋さん
+    CAMP_ROLE_ID,   # 合宿係
+    OTSUCHI_ROLE_ID # 大槌PR係
+]
 
 # ===== Intent設定 =====
 intents = discord.Intents.default()
-intents.members = True  # ← 必須
+intents.members = True  # メンバー情報取得に必須
 
 client = discord.Client(intents=intents)
+
 
 @client.event
 async def on_ready():
@@ -21,63 +41,45 @@ async def on_ready():
         await client.close()
         return
 
-    print("fetching members...")
+    # ===== ロール取得 =====
+    roles = []
+    for rid in TARGET_ROLE_IDS:
+        role = guild.get_role(rid)
+        if role is None:
+            print(f"[WARN] role not found: {rid}")
+            continue
+        roles.append(role)
 
-    members = []
-    count = 0
+    if not roles:
+        print("No valid roles found")
+        await client.close()
+        return
 
-    async for m in guild.fetch_members(limit=None):
-        members.append(m)
-        count += 1
+    # ===== メンバー集約（重複排除）=====
+    members_set = set()
 
-        if count % 50 == 0:
-            print(f"fetched: {count}")
+    for role in roles:
+        print(f"\n■ Role: {role.name} ({role.id})")
 
-    print(f"total members: {len(members)}")
-
-    print("\n===== Role Member List =====")
-
-    for role in guild.roles:
-        print(f"\n■ {role.name}")
-
-        role_members = [m for m in members if role in m.roles]
-
-        if not role_members:
+        if not role.members:
             print("  (no members)")
             continue
 
-        for member in role_members:
-            print(f"  - {member.display_name}")
+        for member in role.members:
+            members_set.add(member)
+
+    # ===== 結果出力 =====
+    print("\n===== Combined Member List (deduplicated) =====")
+
+    if not members_set:
+        print("No members found")
+    else:
+        for m in members_set:
+            print(f"- {m.display_name} ({m.id})")
 
     print("\nDone")
 
     await client.close()
 
-    # ===== メンバーキャッシュ取得（重要）=====
-    await guild.chunk()
-
-    # ===== ここに入れる =====
-    print("before fetch")
-    async for m in guild.fetch_members(limit=1):
-        print("got one member")
-        break
-    print("after fetch")
-
-    print("\n===== Role Member List =====")
-
-    for role in guild.roles:
-        print(f"\n■ {role.name} ({role.id})")
-
-        if len(role.members) == 0:
-            print("  (no members)")
-            continue
-
-        for member in role.members:
-            print(f"  - {member.display_name} ({member.id})")
-
-    print("\n===== Done =====")
-
-    # 一回実行で終了
-    await client.close()
 
 client.run(DISCORD_TOKEN)

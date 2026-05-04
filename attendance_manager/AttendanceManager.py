@@ -1,4 +1,16 @@
 '''
+[Readme]
+1.  練習1ヶ月前を切った＆未通知の練習をSupabase-Scheduleより抽出し、
+    練習予定スレッドを立てて出欠調査をオープン
+2.  練習2週間前を切った＆未通知の練習をSupabase-Scheduleより抽出し、
+    出欠回答をリマインド
+3.  練習1週間前を切った＆未通知の練習をSupabase-Scheduleより抽出し、
+    出欠調査メッセージに対して押されている「出席」「遅刻」「早退」のリアクションを押しているユーザのIDを読み出す、
+    その後読み出したユーザIDをSupabase-Membersを用いて楽器や名前と照会、楽器ごとにリストアップ＆集計した出席者をDiscordに投下
+4.  練習2日前を切った＆未通知の練習をSupabase-Scheduleより抽出し、
+    出欠調査メッセージに対して押されている「出席」「遅刻」「早退」のリアクションを押しているユーザのIDを読み出す、
+    その後読み出したユーザIDをSupabase-Membersを用いて楽器や名前と照会、楽器ごとにリストアップ＆集計した出席者をDiscordに投下
+
 [Release Note]
 2026/4/XX version 1 created by M.Ishida
 First Release Version
