@@ -7,6 +7,8 @@ Add Function "Export Monthly Schedule to Supabase"
 Add Function "Remind Schedule 1 Week Before"
 2026/4/15 version 3 created by M.Ishida
 Add Function "Attendance Management"
+2026/6/21 version 4 created by M.Ishida
+Change Notification Settings
 '''
 
 import subprocess
@@ -25,7 +27,9 @@ TARGET_SCRIPTS = [
 ]
 
 SUCCESS_SCRIPT = BASE_DIR / "success.py"
+SUCCESS_SCRIPT_2 = BASE_DIR / "success2.py"
 FAILED_SCRIPT  = BASE_DIR / "failed.py"
+FAILED_SCRIPT_2  = BASE_DIR / "failed2.py"
 
 def run_script(path: Path):
     result = subprocess.run(
@@ -59,9 +63,12 @@ def main():
     if failures:
         args = [sys.executable, str(FAILED_SCRIPT), str(failures)]
         subprocess.run(args)
+        args = [sys.executable, str(FAILED_SCRIPT_2), str(failures)]
+        subprocess.run(args)
         sys.exit(1)
     else:
         subprocess.run([sys.executable, str(SUCCESS_SCRIPT)])
+        subprocess.run([sys.executable, str(SUCCESS_SCRIPT_2)])
         sys.exit(0)
 
 if __name__ == "__main__":
