@@ -9,6 +9,8 @@ Add Function "Remind Schedule 1 Week Before"
 Add Function "Attendance Management"
 2026/6/21 version 4 created by M.Ishida
 Change Notification Settings
+2026/6/27 version 5 crated by M.Ishida
+Add Function "New Member Announce"
 '''
 
 import subprocess
@@ -22,6 +24,7 @@ TARGET_SCRIPTS = [
     BASE_DIR / "schedule_manager/ScheduleManager.py",
     BASE_DIR / "one_week_reminder/OneWeekReminder.py",
     BASE_DIR / "attendance_manager/AttendanceManager.py",
+    BASE_DIR / "new_member_announcer/NewMemberAnnouncer.py",
     # BASE_DIR / "target2.py",
     # BASE_DIR / "target3.py",
 ]
