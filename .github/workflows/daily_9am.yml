@@ -42,3 +42,4 @@ jobs:
           DISCORD_ROLE_ID_CARRIER: ${{ secrets.DISCORD_ROLE_ID_CARRIER }}
           DISCORD_ROLE_ID_PERCUSSION: ${{ secrets.DISCORD_ROLE_ID_PERCUSSION }}
           DISCORD_EVERYONE: ${{ secrets.DISCORD_EVERYONE }} 
+          DISCORD_SERVER_ID: ${{ secrets.DISCORD_SERVER_ID }}
