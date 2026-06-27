@@ -1,4 +1,4 @@
-name: Daily 9AM Job
+name: Test
 
 on:
   schedule:
