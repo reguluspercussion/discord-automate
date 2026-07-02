@@ -1,85 +1,90 @@
+# role_report.py
 import os
+from datetime import datetime, timedelta, timezone
+import asyncpg
 import discord
 
-# ===== 環境変数 =====
-DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
-SERVER_ID = int(os.environ["DISCORD_SERVER_ID"])
+DISCORD_TOKEN=os.environ["DISCORD_BOT_TOKEN_SCHEDULE_MANAGER"]
+SERVER_ID=int(os.environ["DISCORD_SERVER_ID"])
+THREAD_ID=os.environ["DISCORD_THREAD_ID_ROLE_LIST"]
 
-MUSIC_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_MUSIC_COMMITEE"])
-SCORE_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_SCORE"])
-PR_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_PR"])
-IT_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_IT"])
-CARRIER_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_CARRIER"])
-CAMP_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_CAMP"])
-OTSUCHI_ROLE_ID = int(os.environ["DISCORD_ROLE_ID_OTSUCHI"])
-
-# ===== 抽出したいロールID =====
-TARGET_ROLE_IDS = [
-    MUSIC_ROLE_ID,  # 音楽委員
-    SCORE_ROLE_ID,  # 楽譜係
-    PR_ROLE_ID,     # 広報係
-    IT_ROLE_ID,     # IT係
-    CARRIER_ROLE_ID,# 運び屋さん
-    CAMP_ROLE_ID,   # 合宿係
-    OTSUCHI_ROLE_ID # 大槌PR係
+ROLE_ENV_NAMES=[
+"DISCORD_ROLE_ID_MUSIC_COMMITEE",
+"DISCORD_ROLE_ID_SCORE",
+"DISCORD_ROLE_ID_PR",
+"DISCORD_ROLE_ID_IT",
+"DISCORD_ROLE_ID_CARRIER",
+"DISCORD_ROLE_ID_EVENT",
+"DISCORD_ROLE_ID_OTSUCHI",
 ]
+TARGET_ROLE_IDS=[int(os.environ[x]) for x in ROLE_ENV_NAMES]
 
-# ===== Intent設定 =====
-intents = discord.Intents.default()
-intents.members = True  # メンバー情報取得に必須
+DB_HOST=os.environ["DB_HOST"]
+DB_PORT=int(os.environ["DB_PORT"])
+DB_NAME=os.environ["DB_DATABASE"]
+DB_USER=os.environ["DB_USER"]
+DB_PASSWORD=os.environ["DB_PASSWORD"]
 
-client = discord.Client(intents=intents)
-
+intents=discord.Intents.default()
+intents.members=True
+client=discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"Logged in as {client.user}")
-
-    guild = client.get_guild(SERVER_ID)
+    guild=client.get_guild(SERVER_ID)
     if guild is None:
-        print("Guild not found")
-        await client.close()
-        return
+        print("Guild not found"); await client.close(); return
 
-    # ===== ロール取得 =====
-    roles = []
+    conn=await asyncpg.connect(host=DB_HOST,port=DB_PORT,database=DB_NAME,user=DB_USER,password=DB_PASSWORD,ssl="require")
+    rows=await conn.fetch("SELECT user_id,inst_id,instrument,display_name FROM member")
+    await conn.close()
+
+    member_map={str(r["user_id"]):{"inst_id":r["inst_id"],"name":f'{r["instrument"]} {r["display_name"]}'} for r in rows}
+
+    now = datetime.now()
+    lines = [
+        f"===== {now.strftime('%Y年%m月%d日')}時点の係メンバー一覧 =====",
+        ""
+    ]
     for rid in TARGET_ROLE_IDS:
-        role = guild.get_role(rid)
+        role=guild.get_role(rid)
         if role is None:
-            print(f"[WARN] role not found: {rid}")
             continue
-        roles.append(role)
+        lines.append(f"■ {role.name}")
+        members=[m for m in role.members if not m.bot]
+        members.sort(key=lambda m: member_map.get(str(m.id),{"inst_id":9999})["inst_id"])
+        if not members:
+            lines.append("  (no members)")
+        else:
+            for m in members:
+                lines.append(f' - {member_map.get(str(m.id),{"name":m.display_name})["name"]}')
+        lines.append("")
 
-    if not roles:
-        print("No valid roles found")
-        await client.close()
-        return
+    message="\n".join(lines)
+    print(message)
 
-    # ===== メンバー集約（重複排除）=====
-    members_set = set()
+    thread=guild.get_thread(THREAD_ID)
+    if thread is None:
+        thread=await client.fetch_channel(THREAD_ID)
 
-    for role in roles:
-        print(f"\n■ Role: {role.name} ({role.id})")
+    last=None
+    async for msg in thread.history(limit=100):
+        if msg.author.id==client.user.id:
+            last=msg
+            break
 
-        if not role.members:
-            print("  (no members)")
-            continue
+    should_post = last is None or (datetime.now(timezone.utc)-last.created_at)>=timedelta(days=30)
 
-        for member in role.members:
-            members_set.add(member)
+    await thread.send(message)
+    print("Posted.")
 
-    # ===== 結果出力 =====
-    print("\n===== Combined Member List (deduplicated) =====")
-
-    if not members_set:
-        print("No members found")
+    '''
+    if should_post:
+        await thread.send(message)
+        print("Posted.")
     else:
-        for m in members_set:
-            print(f"- {m.display_name} ({m.id})")
-
-    print("\nDone")
-
+        print("Skipped: latest bot post is within 30 days.")
+    '''
     await client.close()
-
 
 client.run(DISCORD_TOKEN)

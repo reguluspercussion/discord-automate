@@ -25,6 +25,7 @@ TARGET_SCRIPTS = [
     BASE_DIR / "one_week_reminder/OneWeekReminder.py",
     BASE_DIR / "attendance_manager/AttendanceManager.py",
     BASE_DIR / "new_member_announcer/NewMemberAnnouncer.py",
+    BASE_DIR / "role_extracter/RoleExtracter.py"
     # BASE_DIR / "target2.py",
     # BASE_DIR / "target3.py",
 ]
