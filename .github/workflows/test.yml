@@ -1,0 +1,46 @@
+name: Daily 9AM Job
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - run: pip install -r requirements.txt
+      
+      # - run: python runner.py
+      - run: python role_extracter/RoleExtracter.py
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_BOT_TOKEN_WORK_NOTIFICATION: ${{ secrets.DISCORD_BOT_TOKEN_WORK_NOTIFICATION }}
+          DISCORD_BOT_TOKEN_SCHEDULE_MANAGER: ${{ secrets.DISCORD_BOT_TOKEN_SCHEDULE_MANAGER }}
+          DISCORD_CHANNEL_ID_TEST_POST: ${{ secrets.DISCORD_CHANNEL_ID_TEST_POST }}
+          DISCORD_CHANNEL_ID_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_NOTIFICATION }}
+          DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_SUCCESS_NOTIFICATION }}
+          DISCORD_CHANNEL_ID_ERROR_NOTIFICATION: ${{ secrets.DISCORD_CHANNEL_ID_ERROR_NOTIFICATION }}
+          DISCORD_CHANNEL_ID_MONTHLY_SCHEDULE: ${{ secrets.DISCORD_CHANNEL_ID_MONTHLY_SCHEDULE }}
+          DISCORD_CHANNEL_ID_MUSIC_COMMITEE: ${{ secrets.DISCORD_CHANNEL_ID_MUSIC_COMMITEE }}
+          DISCORD_CHANNEL_ID_CARRIER: ${{ secrets.DISCORD_CHANNEL_ID_CARRIER }}
+          DISCORD_CHANNEL_ID_SCHEDULE: ${{ secrets.DISCORD_CHANNEL_ID_SCHEDULE }}
+          DISCORD_THREAD_ID_MEMBER_NOTICE: ${{ secrets.DISCORD_THREAD_ID_MEMBER_NOTICE }}
+          DISCORD_THREAD_ID_ROLE_LIST: ${{ secrets.DISCORD_THREAD_ID_ROLE_LIST }}
+          DISCORD_ROLE_ID_MUSIC_COMMITEE: ${{ secrets.DISCORD_ROLE_ID_MUSIC_COMMITEE }}
+          DISCORD_ROLE_ID_CARRIER: ${{ secrets.DISCORD_ROLE_ID_CARRIER }}
+          DISCORD_ROLE_ID_PERCUSSION: ${{ secrets.DISCORD_ROLE_ID_PERCUSSION }}
+          DISCORD_EVERYONE: ${{ secrets.DISCORD_EVERYONE }} 
+          DISCORD_SERVER_ID: ${{ secrets.DISCORD_SERVER_ID }}
