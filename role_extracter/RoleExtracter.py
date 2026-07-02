@@ -74,17 +74,13 @@ async def on_ready():
             break
 
     should_post = last is None or (datetime.now(timezone.utc)-last.created_at)>=timedelta(days=30)
-
-    await thread.send(message)
-    print("Posted.")
-
-    '''
+    
     if should_post:
         await thread.send(message)
         print("Posted.")
     else:
         print("Skipped: latest bot post is within 30 days.")
-    '''
+    
     await client.close()
 
 client.run(DISCORD_TOKEN)
